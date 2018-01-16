@@ -18,42 +18,50 @@ public class ChiefWaiter extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(context().system(), this);
 
-    private final PartialFunction<Object, BoxedUnit> sendOrdersToBasicWaiter;
+    private final PartialFunction<Object, BoxedUnit> handleOrders = ReceiveBuilder
+            .match(Order.class,
+                    order -> {
+                        log.info("chief waiter will handle the order = " + order + "\n");
+                    })
+            .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
+            .build();
+
+
+    private final PartialFunction<Object, BoxedUnit> sendOrdersToBasicWaiter = ReceiveBuilder
+            .match(Order.class,
+                    order -> {
+
+                        log.info("propagating order to basic waiter, order = " + order + "\n");
+
+                        ActorRef basicWaiterActor = getChild();
+
+                        basicWaiterActor.tell(order, getContext().self());
+
+                    })
+            .match(UnderHeavyWorkload.class,
+                    msg -> {
+
+                        log.info("basic waiter = " + getContext().sender().path() + " cannot handle another workload, so chief will handle the other orders." + "\n");
+                        getContext().become(handleOrders);
+
+                    })
+            .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
+            .build();
+
 
     public ChiefWaiter() {
-
-        sendOrdersToBasicWaiter = ReceiveBuilder
-                .match(Order.class,
-                        order -> order.getItems() != null && !order.getItems().isEmpty(),
-                        order -> {
-
-                            log.info("propagating order to basic waiter, order = " + order);
-
-                            ActorRef basicWaiterActor = getChild();
-
-                            basicWaiterActor.tell(order, getContext().self());
-
-                        })
-                .match(UnderHeavyWorkload.class,
-                        msg -> {
-
-                            log.info("basic waiter cannot handle workload, so chief will handle it.");
-
-                        })
-                .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
-                .build();
 
         receive(sendOrdersToBasicWaiter);
     }
 
     @Override
-    public void preStart() throws Exception {
-        log.info("actor is going to start...");
+    public void preStart() {
+        log.info("actor is going to start..." + "\n");
     }
 
     @Override
-    public void postStop() throws Exception {
-        log.info("actor is going to stop...");
+    public void postStop() {
+        log.info("actor is going to stop..." + "\n");
     }
 
     private ActorRef getChild() {

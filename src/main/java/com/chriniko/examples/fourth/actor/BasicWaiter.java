@@ -2,6 +2,7 @@ package com.chriniko.examples.fourth.actor;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
+import akka.actor.Status;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.pf.ReceiveBuilder;
@@ -20,39 +21,34 @@ public class BasicWaiter extends AbstractActor {
     private static final int ORDERS_UNDER_PROCESSING_THRESHOLD = 2;
     private final List<Order> ordersUnderProcessing = new ArrayList<>();
 
-    private final PartialFunction<Object, BoxedUnit> availableForService;
-    private final PartialFunction<Object, BoxedUnit> notAvailableForService;
+    private final PartialFunction<Object, BoxedUnit> notAvailableForService = ReceiveBuilder
+            .match(Order.class,
+                    order -> {
+                        log.info("could not handle another order (too much workload), reporting to chief = "
+                                + getContext().sender().path()
+                                + ", order = "
+                                + order + "\n");
+                        getContext().sender().tell(new UnderHeavyWorkload(order), getContext().self());
+                    })
+            .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
+            .build();
+
+    private final PartialFunction<Object, BoxedUnit> availableForService = ReceiveBuilder
+            .match(Order.class,
+                    order -> {
+                        log.info("incoming order = " + order + "\n");
+
+                        if (ordersUnderProcessing.size() == ORDERS_UNDER_PROCESSING_THRESHOLD) {
+                            getContext().become(notAvailableForService);
+                        }
+                        ordersUnderProcessing.add(order);
+
+                    })
+            .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
+            .build();
+
 
     public BasicWaiter() {
-
-        notAvailableForService = ReceiveBuilder.match(Order.class,
-                order -> order.getItems() != null && !order.getItems().isEmpty(),
-                order -> {
-                    log.info("could not handle incoming order (too much workload), reporting to chief = "
-                            + getContext().sender().path()
-                            + ", order = "
-                            + order);
-                    getContext().sender().tell(new UnderHeavyWorkload(order), getContext().self());
-                })
-                .build();
-
-        availableForService = ReceiveBuilder.match(Order.class,
-                order -> order.getItems() != null && !order.getItems().isEmpty(),
-                order -> {
-                    log.info("incoming order = " + order);
-
-                    if (ordersUnderProcessing.size() >= ORDERS_UNDER_PROCESSING_THRESHOLD) {
-
-                        getContext().become(notAvailableForService);
-
-                    } else {
-                        ordersUnderProcessing.add(order);
-                    }
-
-                })
-                .build();
-
-
         receive(availableForService);
     }
 
