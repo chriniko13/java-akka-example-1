@@ -1,9 +1,10 @@
-package com.chriniko.examples.second.actor;
+package com.chriniko.examples_scala.second.actor;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.testkit.TestActorRef;
+import com.chriniko.examples.second.actor.AkkademyDb;
 import com.chriniko.examples.second.message.SetRequest;
 import org.junit.Test;
 
@@ -26,7 +27,7 @@ public class AkkademyDbTest {
 
         //then...
         AkkademyDb akkademyDb = actorRef.underlyingActor();
-        assertEquals(akkademyDb.db.get("key"), "value");
+        assertEquals(akkademyDb.getDb().get("key"), "value");
 
     }
 }

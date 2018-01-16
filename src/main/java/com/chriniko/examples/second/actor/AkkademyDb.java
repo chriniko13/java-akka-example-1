@@ -31,4 +31,8 @@ public class AkkademyDb extends AbstractActor {
     public static Props props() {
         return Props.create(AkkademyDb.class);
     }
+
+    public Map<String, Object> getDb() {
+        return db;
+    }
 }
