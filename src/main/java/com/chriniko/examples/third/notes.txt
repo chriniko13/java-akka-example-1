@@ -1,0 +1,3 @@
+NOTES
+
+This example demonstrates the communication between actors.

@@ -1,0 +1,5 @@
+NOTES
+
+This example demonstrates the actors hierarchy.
+Also demonstrates actors behaviour.
+Also demonstrates some simple actor lifecycle hooks.
