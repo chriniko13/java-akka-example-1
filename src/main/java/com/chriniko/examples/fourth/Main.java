@@ -7,7 +7,6 @@ import com.chriniko.examples.fourth.message.Order;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 public class Main {
 
@@ -23,7 +22,6 @@ public class Main {
 
         //secondExample(chiefWaiter); // Note: comment-uncomment
 
-
     }
 
     private static void firstExample(ActorRef chiefWaiter) {
@@ -35,14 +33,6 @@ public class Main {
         //with the following message ChiefWaiter actor will handle the upcoming orders (change of behaviour)...
         chiefWaiter.tell(new Order(Collections.singletonList("itemG")), ActorRef.noSender());
 
-        try {
-            TimeUnit.SECONDS.sleep(3);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        //this order will be handled from ChiefWaiter actor...
-        chiefWaiter.tell(new Order(Collections.singletonList("itemH")), ActorRef.noSender());
     }
 
     private static void secondExample(ActorRef chiefWaiter) {

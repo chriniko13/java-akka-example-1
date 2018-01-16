@@ -18,15 +18,6 @@ public class ChiefWaiter extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(context().system(), this);
 
-    private final PartialFunction<Object, BoxedUnit> handleOrders = ReceiveBuilder
-            .match(Order.class,
-                    order -> {
-                        log.info("chief waiter will handle the order = " + order + "\n");
-                    })
-            .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
-            .build();
-
-
     private final PartialFunction<Object, BoxedUnit> sendOrdersToBasicWaiter = ReceiveBuilder
             .match(Order.class,
                     order -> {
@@ -42,7 +33,6 @@ public class ChiefWaiter extends AbstractActor {
                     msg -> {
 
                         log.info("basic waiter = " + getContext().sender().path() + " cannot handle another workload, so chief will handle the other orders." + "\n");
-                        getContext().become(handleOrders);
 
                     })
             .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
@@ -50,7 +40,6 @@ public class ChiefWaiter extends AbstractActor {
 
 
     public ChiefWaiter() {
-
         receive(sendOrdersToBasicWaiter);
     }
 
