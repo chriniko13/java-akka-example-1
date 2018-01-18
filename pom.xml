@@ -17,10 +17,30 @@
     <dependencies>
 
         <!-- START: DEV DEPENDENCIES -->
+
         <!-- Akka Actors-->
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-actor_2.11</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+
+        <!-- Akka Http Core -->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-http-core_2.11</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-http-experimental_2.11</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-http-jackson-experimental_2.11</artifactId>
             <version>${akka.version}</version>
         </dependency>
 
@@ -36,6 +56,8 @@
 
 
         <!-- START: TEST DEPENDENCIES -->
+
+        <!-- Akka Testkit-->
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-testkit_2.11</artifactId>
@@ -43,12 +65,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- JUnit -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+
         <!-- END: TEST DEPENDENCIES -->
 
     </dependencies>
