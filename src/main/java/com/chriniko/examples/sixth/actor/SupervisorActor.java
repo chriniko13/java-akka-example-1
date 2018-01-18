@@ -29,7 +29,7 @@ public class SupervisorActor extends AbstractActor {
 
         receive(
                 ReceiveBuilder
-                        .match(WorkToDo.class, msg -> unstableActorRef.tell(new WorkToDo(), self()))
+                        .match(WorkToDo.class, msg -> unstableActorRef.forward(new WorkToDo(), getContext()))
                         .build()
 
         );
