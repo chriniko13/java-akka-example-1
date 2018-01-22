@@ -12,17 +12,28 @@ import java.util.Random;
 
 public class DbActor extends AbstractLoggingActor {
 
+    private final StudentService studentService;
+
+    private static final boolean ENABLE_SELF_STOP_SCENARIO = false;
+
     public DbActor() {
+
+        studentService = new StudentService();
 
         receive(
                 ReceiveBuilder
                         .match(GetStudent.class, getStudentMsg -> {
 
-                            if (new Random().nextInt(2) == 1) {
-                                context().stop(self());
-                            } else {
-                                getStudent(getStudentMsg.getId());
+                            if (ENABLE_SELF_STOP_SCENARIO) {
+                                // Note: make sometimes this actor to stop himself, so the supervisor receives a Terminated message.
+                                if (new Random().nextInt(2) == 1) {
+                                    context().stop(self());
+                                    return;
+                                }
                             }
+
+                            getStudent(getStudentMsg.getId());
+
                         })
                         .build()
         );
@@ -34,8 +45,13 @@ public class DbActor extends AbstractLoggingActor {
         log().info("i just stopped, path = {}", self().path());
     }
 
+    @Override
+    public void postRestart(Throwable reason) {
+        log().info("i just restarted, reason = {}, path = {}", reason, self().path());
+    }
+
     private void getStudent(String studentId) {
-        final Student result = StudentService.getInstance().fetch(studentId);
+        final Student result = studentService.fetch(studentId);
         sender().tell(new StudentResult(result), self());
     }
 
