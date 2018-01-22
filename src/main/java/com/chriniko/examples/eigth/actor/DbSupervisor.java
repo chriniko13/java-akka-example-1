@@ -25,8 +25,9 @@ public class DbSupervisor extends AbstractLoggingActor {
                             .match(RequestTimedOutException.class, e -> SupervisorStrategy.resume())
                             .build()
             );
+    private static final int TOTAL_ROUTEES = 5;
 
-    private final Router router;
+    private Router router;
 
     public DbSupervisor() {
         router = initRouter();
@@ -37,7 +38,21 @@ public class DbSupervisor extends AbstractLoggingActor {
         receive(
                 ReceiveBuilder
                         .match(GetStudent.class, getStudentMessage -> router.route(getStudentMessage, sender()))
-                        //TODO should handle Terminated message from child actor...
+                        .match(Terminated.class, terminatedChildMessage -> {
+
+                            log().info("terminated received from child actor with path: {}", terminatedChildMessage.getActor().path());
+
+                            // remove terminated child
+                            router = this.router.removeRoutee(terminatedChildMessage.actor());
+
+                            // create a new child and watch it
+                            ActorRef dbActor = getContext().actorOf(DbActor.props());
+                            getContext().watch(dbActor);
+
+                            // add it to router
+                            router = router.addRoutee(new ActorRefRoutee(dbActor));
+
+                        })
                         .build()
         );
     }
@@ -45,10 +60,11 @@ public class DbSupervisor extends AbstractLoggingActor {
     private Router initRouter() {
         final List<Routee> routees = new ArrayList<>();
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < TOTAL_ROUTEES; i++) {
             ActorRef dbActor = getContext().actorOf(DbActor.props());
 
             getContext().watch(dbActor);
+
             routees.add(new ActorRefRoutee(dbActor));
         }
 

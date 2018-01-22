@@ -29,31 +29,7 @@ import static akka.pattern.PatternsCS.pipe;
 
 public class WebServer extends AbstractLoggingActor {
 
-    private final static Marshaller<Student, RequestEntity> studentMarshaller = Jackson.<Student>marshaller();
-
-    // internal protocol
-    private static class ServerStarted {
-        final String host;
-        final int port;
-
-        public ServerStarted(String host, int port) {
-            this.host = host;
-            this.port = port;
-        }
-    }
-
-    private static class ServerFailed {
-        final Exception cause;
-
-        public ServerFailed(Exception cause) {
-            this.cause = cause;
-        }
-    }
-
-    public static Props props(ActorRef database, String host, int port) {
-        return Props.create(WebServer.class, database, host, port);
-    }
-
+    private final static Marshaller<Student, RequestEntity> studentMarshaller = Jackson.marshaller();
 
     private final ActorRef database;
     private final CompletionStage<ServerBinding> bindingCompletionStage;
@@ -63,30 +39,7 @@ public class WebServer extends AbstractLoggingActor {
         this.database = database;
 
         // create route...
-        final Route route =
-                logRequest("request", Logging.InfoLevel(), () ->
-                        path(segment("students").slash(longSegment()), (studentId) ->
-
-                                get(() ->
-                                        onComplete(lookupStudent(studentId), (Try<StudentResult> result) -> {
-
-                                            if (result.isFailure()) {
-                                                return complete(StatusCodes.SERVICE_UNAVAILABLE);
-                                            } else {
-
-                                                final StudentResult studentResult = result.get();
-
-                                                if (studentResult.getStudent() != null) {
-                                                    return completeOK(studentResult.getStudent(), studentMarshaller);
-                                                } else {
-                                                    return complete(StatusCodes.NOT_FOUND);
-                                                }
-
-                                            }
-                                        })
-                                )
-                        )
-                );
+        final Route route = createRoute();
 
         // create materializer...
         Materializer materializer = ActorMaterializer.create(context());
@@ -111,6 +64,32 @@ public class WebServer extends AbstractLoggingActor {
                 .build());
     }
 
+    private Route createRoute() {
+        return logRequest("request", Logging.InfoLevel(), () ->
+                path(segment("students").slash(longSegment()), (studentId) ->
+
+                        get(() ->
+                                onComplete(lookupStudent(studentId), (Try<StudentResult> result) -> {
+
+                                    if (result.isFailure()) {
+                                        return complete(StatusCodes.SERVICE_UNAVAILABLE);
+                                    } else {
+
+                                        final StudentResult studentResult = result.get();
+
+                                        if (studentResult.getStudent() != null) {
+                                            return completeOK(studentResult.getStudent(), studentMarshaller);
+                                        } else {
+                                            return complete(StatusCodes.NOT_FOUND);
+                                        }
+
+                                    }
+                                })
+                        )
+                )
+        );
+    }
+
     private void onStarted(ServerBinding binding) {
         final InetSocketAddress address = binding.localAddress();
         log().info("Server started at {}:{}", address.getHostString(), address.getPort());
@@ -129,6 +108,9 @@ public class WebServer extends AbstractLoggingActor {
 
     }
 
+    public static Props props(ActorRef database, String host, int port) {
+        return Props.create(WebServer.class, database, host, port);
+    }
 
     @Override
     public void postStop() {
