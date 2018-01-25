@@ -1,6 +1,8 @@
 package com.chriniko.examples.second.message;
 
-public class SetRequest {
+import java.io.Serializable;
+
+public class SetRequest implements Serializable {
 
     private final String key;
     private final Object value;

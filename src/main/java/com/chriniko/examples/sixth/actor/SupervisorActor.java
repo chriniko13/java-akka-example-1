@@ -24,21 +24,26 @@ public class SupervisorActor extends AbstractActor {
     );
 
 
+    private final Receive receive;
+
     public SupervisorActor() {
         ActorRef unstableActorRef = getContext().actorOf(UnstableActor.props(), "unstable-actor");
 
-        receive(
-                ReceiveBuilder
-                        .match(WorkToDo.class, msg -> unstableActorRef.forward(new WorkToDo(), getContext()))
-                        .build()
-
-        );
+        receive = ReceiveBuilder
+                .create()
+                .match(WorkToDo.class, msg -> unstableActorRef.forward(new WorkToDo(), getContext()))
+                .build();
     }
 
 
     @Override
     public SupervisorStrategy supervisorStrategy() {
         return STRATEGY;
+    }
+
+    @Override
+    public Receive createReceive() {
+        return receive;
     }
 
     public static Props props() {

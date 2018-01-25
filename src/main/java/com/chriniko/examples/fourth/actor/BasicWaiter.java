@@ -8,8 +8,6 @@ import akka.event.LoggingAdapter;
 import akka.japi.pf.ReceiveBuilder;
 import com.chriniko.examples.fourth.message.Order;
 import com.chriniko.examples.fourth.message.UnderHeavyWorkload;
-import scala.PartialFunction;
-import scala.runtime.BoxedUnit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +19,8 @@ public class BasicWaiter extends AbstractActor {
     private static final int ORDERS_UNDER_PROCESSING_THRESHOLD = 2;
     private final List<Order> ordersUnderProcessing = new ArrayList<>();
 
-    private final PartialFunction<Object, BoxedUnit> notAvailableForService = ReceiveBuilder
+    private final Receive notAvailableForService = ReceiveBuilder
+            .create()
             .match(Order.class,
                     order -> {
                         log.info("could not handle another order (too much workload), reporting to chief = "
@@ -33,7 +32,8 @@ public class BasicWaiter extends AbstractActor {
             .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
             .build();
 
-    private final PartialFunction<Object, BoxedUnit> availableForService = ReceiveBuilder
+    private final Receive availableForService = ReceiveBuilder
+            .create()
             .match(Order.class,
                     order -> {
                         log.info("incoming order = " + order + "\n");
@@ -47,12 +47,12 @@ public class BasicWaiter extends AbstractActor {
             .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
             .build();
 
-
-    public BasicWaiter() {
-        receive(availableForService);
-    }
-
     public static Props props() {
         return Props.create(BasicWaiter.class);
+    }
+
+    @Override
+    public Receive createReceive() {
+        return availableForService;
     }
 }

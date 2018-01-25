@@ -9,8 +9,6 @@ import akka.event.LoggingAdapter;
 import akka.japi.pf.ReceiveBuilder;
 import com.chriniko.examples.fourth.message.Order;
 import com.chriniko.examples.fourth.message.UnderHeavyWorkload;
-import scala.PartialFunction;
-import scala.runtime.BoxedUnit;
 
 public class ChiefWaiter extends AbstractActor {
 
@@ -18,7 +16,8 @@ public class ChiefWaiter extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(context().system(), this);
 
-    private final PartialFunction<Object, BoxedUnit> sendOrdersToBasicWaiter = ReceiveBuilder
+    private final Receive sendOrdersToBasicWaiter = ReceiveBuilder
+            .create()
             .match(Order.class,
                     order -> {
 
@@ -38,9 +37,8 @@ public class ChiefWaiter extends AbstractActor {
             .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
             .build();
 
-
     public ChiefWaiter() {
-        receive(sendOrdersToBasicWaiter);
+        //nothing to do yet.
     }
 
     @Override
@@ -51,6 +49,11 @@ public class ChiefWaiter extends AbstractActor {
     @Override
     public void postStop() {
         log.info("actor is going to stop..." + "\n");
+    }
+
+    @Override
+    public Receive createReceive() {
+        return sendOrdersToBasicWaiter;
     }
 
     private ActorRef getChild() {

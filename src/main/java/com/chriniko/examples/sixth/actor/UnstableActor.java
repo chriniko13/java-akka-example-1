@@ -14,11 +14,12 @@ public class UnstableActor extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(context().system(), this);
 
+    private final Receive receive;
 
     public UnstableActor() {
 
-        receive(
-                ReceiveBuilder
+        receive = ReceiveBuilder
+                .create()
                 .match(WorkToDo.class, msg -> {
 
                     if (new Random().nextInt(2) == 1) {
@@ -29,9 +30,13 @@ public class UnstableActor extends AbstractActor {
                     }
 
                 })
-                .build()
+                .build();
 
-        );
+    }
+
+    @Override
+    public Receive createReceive() {
+        return null;
     }
 
     @Override

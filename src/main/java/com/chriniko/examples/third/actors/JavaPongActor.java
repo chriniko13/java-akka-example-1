@@ -13,8 +13,11 @@ public class JavaPongActor extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(context().system(), this);
 
+    private final Receive receive;
+
     public JavaPongActor() {
-        receive(ReceiveBuilder
+        receive = ReceiveBuilder
+                .create()
                 .match(String.class, "ping"::equals, msg -> {
                     log.info("message = " + msg);
 
@@ -23,10 +26,16 @@ public class JavaPongActor extends AbstractActor {
                     sender().tell("pong", self());
                 })
                 .matchAny(msg -> sender().tell(new Status.Failure(new IllegalStateException("unknown message")), self()))
-                .build());
+                .build();
     }
+
 
     public static Props props() {
         return Props.create(JavaPongActor.class);
+    }
+
+    @Override
+    public Receive createReceive() {
+        return receive;
     }
 }

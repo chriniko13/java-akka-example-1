@@ -29,32 +29,33 @@ public class DbSupervisor extends AbstractLoggingActor {
 
     private Router router;
 
+    private final Receive receive;
+
     public DbSupervisor() {
         router = initRouter();
-        initMessageHandling();
+        receive = initMessageHandling();
     }
 
-    private void initMessageHandling() {
-        receive(
-                ReceiveBuilder
-                        .match(GetStudent.class, getStudentMessage -> router.route(getStudentMessage, sender()))
-                        .match(Terminated.class, terminatedChildMessage -> {
+    private Receive initMessageHandling() {
+        return ReceiveBuilder
+                .create()
+                .match(GetStudent.class, getStudentMessage -> router.route(getStudentMessage, sender()))
+                .match(Terminated.class, terminatedChildMessage -> {
 
-                            log().info("terminated received from child actor with path: {}", terminatedChildMessage.getActor().path());
+                    log().info("terminated received from child actor with path: {}", terminatedChildMessage.getActor().path());
 
-                            // remove terminated child
-                            router = this.router.removeRoutee(terminatedChildMessage.actor());
+                    // remove terminated child
+                    router = this.router.removeRoutee(terminatedChildMessage.actor());
 
-                            // create a new child and watch it
-                            ActorRef dbActor = getContext().actorOf(DbActor.props());
-                            getContext().watch(dbActor);
+                    // create a new child and watch it
+                    ActorRef dbActor = getContext().actorOf(DbActor.props());
+                    getContext().watch(dbActor);
 
-                            // add it to router
-                            router = router.addRoutee(new ActorRefRoutee(dbActor));
+                    // add it to router
+                    router = router.addRoutee(new ActorRefRoutee(dbActor));
 
-                        })
-                        .build()
-        );
+                })
+                .build();
     }
 
     private Router initRouter() {
@@ -75,6 +76,11 @@ public class DbSupervisor extends AbstractLoggingActor {
     @Override
     public SupervisorStrategy supervisorStrategy() {
         return SUPERVISOR_STRATEGY;
+    }
+
+    @Override
+    public Receive createReceive() {
+        return receive;
     }
 
     public static Props props() {

@@ -34,6 +34,8 @@ public class WebServer extends AbstractLoggingActor {
     private final ActorRef database;
     private final CompletionStage<ServerBinding> bindingCompletionStage;
 
+    private final Receive receive;
+
     public WebServer(ActorRef database, String host, int port) {
 
         this.database = database;
@@ -58,10 +60,16 @@ public class WebServer extends AbstractLoggingActor {
         pipe(bindingCompletionStage, context().dispatcher()).to(self());
 
         // add message handling...
-        receive(ReceiveBuilder
+        receive = ReceiveBuilder
+                .create()
                 .match(Status.Failure.class, failure -> onFailure(failure.cause()))
                 .match(ServerBinding.class, this::onStarted)
-                .build());
+                .build();
+    }
+
+    @Override
+    public Receive createReceive() {
+        return receive;
     }
 
     private Route createRoute() {
@@ -117,4 +125,5 @@ public class WebServer extends AbstractLoggingActor {
         // make sure we stop the http server when actor stops
         bindingCompletionStage.thenAccept(ServerBinding::unbind);
     }
+
 }

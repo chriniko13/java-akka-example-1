@@ -23,21 +23,32 @@ public class FirstExample {
         greeterActor.tell(new Foo(), ActorRef.noSender());
 
 
-        actorSystem.awaitTermination();
+        try {
+            Thread.sleep(10000);
+            actorSystem.terminate();
+        } catch (InterruptedException e) {
+            e.printStackTrace(System.err);
+        }
     }
-
-
 
     // ---- ACTORS DEFINITION ----
     static class Greeter extends AbstractLoggingActor {
 
         private int counter = 0;
+        private final Receive receive;
 
         public Greeter() {
-            receive(ReceiveBuilder
+
+            receive = ReceiveBuilder
+                    .create()
                     .match(Greet.class, this::onGreet)
                     .matchAny(o -> fallback())
-                    .build());
+                    .build();
+        }
+
+        @Override
+        public Receive createReceive() {
+            return receive;
         }
 
         private void onGreet(Greet greet) {

@@ -7,8 +7,6 @@ import akka.actor.Props;
 import akka.japi.pf.ReceiveBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import scala.PartialFunction;
-import scala.runtime.BoxedUnit;
 
 public class Main {
 
@@ -28,8 +26,6 @@ public class Main {
         alarmActor.tell(new Main.Alarm.Disable("chriniko"), ActorRef.noSender());
         alarmActor.tell(new Main.Alarm.Activity(), ActorRef.noSender());
 
-
-        actorSystem.awaitTermination();
     }
 
 
@@ -56,13 +52,14 @@ public class Main {
         // ----actor behaviour----
         private String password;
 
-        private PartialFunction<Object, BoxedUnit> disabled;
-        private PartialFunction<Object, BoxedUnit> enabled;
+        private Receive disabled;
+        private Receive enabled;
 
         public Alarm(String password) {
             this.password = password;
 
             disabled = ReceiveBuilder
+                    .create()
                     .match(Enable.class,
                             msg -> {
                                 if (msg.getPassword().equals(password)) {
@@ -75,6 +72,7 @@ public class Main {
                     .build();
 
             enabled = ReceiveBuilder
+                    .create()
                     .match(Activity.class, msg -> {
                         log().info("Alarm! Alarm!");
                     })
@@ -87,15 +85,16 @@ public class Main {
                         }
                     })
                     .build();
-
-            receive(disabled);
         }
 
+        @Override
+        public Receive createReceive() {
+            return disabled;
+        }
 
         public static Props props(String password) {
             return Props.create(Alarm.class, password);
         }
     }
-
 
 }

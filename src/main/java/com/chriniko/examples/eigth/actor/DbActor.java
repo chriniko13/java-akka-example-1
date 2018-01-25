@@ -16,28 +16,28 @@ public class DbActor extends AbstractLoggingActor {
 
     private static final boolean ENABLE_SELF_STOP_SCENARIO = false;
 
+    private final Receive receive;
+
     public DbActor() {
 
         studentService = new StudentService();
 
-        receive(
-                ReceiveBuilder
-                        .match(GetStudent.class, getStudentMsg -> {
+        receive = ReceiveBuilder
+                .create()
+                .match(GetStudent.class, getStudentMsg -> {
 
-                            if (ENABLE_SELF_STOP_SCENARIO) {
-                                // Note: make sometimes this actor to stop himself, so the supervisor receives a Terminated message.
-                                if (new Random().nextInt(2) == 1) {
-                                    context().stop(self());
-                                    return;
-                                }
-                            }
+                    if (ENABLE_SELF_STOP_SCENARIO) {
+                        // Note: make sometimes this actor to stop himself, so the supervisor receives a Terminated message.
+                        if (new Random().nextInt(2) == 1) {
+                            context().stop(self());
+                            return;
+                        }
+                    }
 
-                            getStudent(getStudentMsg.getId());
+                    getStudent(getStudentMsg.getId());
 
-                        })
-                        .build()
-        );
-
+                })
+                .build();
     }
 
     @Override
@@ -50,12 +50,19 @@ public class DbActor extends AbstractLoggingActor {
         log().info("i just restarted, reason = {}, path = {}", reason, self().path());
     }
 
+    @Override
+    public Receive createReceive() {
+        return receive;
+    }
+
     private void getStudent(String studentId) {
         final Student result = studentService.fetch(studentId);
         sender().tell(new StudentResult(result), self());
     }
 
     public static Props props() {
-        return Props.create(DbActor.class).withDispatcher("akkasample.blocking-dispatcher");
+        return Props
+                .create(DbActor.class)
+                .withDispatcher("akkasample.blocking-dispatcher");
     }
 }

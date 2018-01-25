@@ -20,7 +20,5 @@ public class Main {
         pongActor1.tell("ping", pingActor1);
 
 
-        actorSystem.awaitTermination();
-
     }
 }
