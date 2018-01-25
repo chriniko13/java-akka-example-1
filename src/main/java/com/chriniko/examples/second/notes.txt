@@ -1,3 +1,0 @@
-NOTES
-
-This example demonstrates how a very simple distributed database works. (UNDER CONSTRUCTION)

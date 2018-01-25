@@ -61,13 +61,6 @@
             <version>0.8.0</version>
         </dependency>
 
-        <!-- Akka Remote -->
-        <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-remote_2.11</artifactId>
-            <version>2.5.9</version>
-        </dependency>
-
         <!-- END: DEV DEPENDENCIES -->
 
 
