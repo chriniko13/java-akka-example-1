@@ -61,6 +61,13 @@
             <version>0.8.0</version>
         </dependency>
 
+        <!-- Boilerpipe -->
+        <dependency>
+            <groupId>com.syncthemall</groupId>
+            <artifactId>boilerpipe</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+
         <!-- END: DEV DEPENDENCIES -->
 
 
