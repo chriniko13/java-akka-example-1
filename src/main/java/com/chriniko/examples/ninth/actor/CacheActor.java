@@ -1,10 +1,9 @@
 package com.chriniko.examples.ninth.actor;
 
 import akka.actor.AbstractLoggingActor;
-import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.japi.pf.ReceiveBuilder;
-import com.chriniko.examples.ninth.message.CacheUrlResultRequest;
+import com.chriniko.examples.ninth.message.CacheUrlResultToStoreRequest;
 import com.chriniko.examples.ninth.message.HttpBodyResultResponse;
 import com.chriniko.examples.ninth.message.HttpUrlGetCacheRequest;
 import com.chriniko.examples.ninth.message.NoCacheResultResponse;
@@ -15,11 +14,9 @@ import java.util.Map;
 public class CacheActor extends AbstractLoggingActor {
 
     private final Map<String, String> urlsToCleanBodies;
-    private final ActorRef httpActor;
 
-    public CacheActor(ActorRef httpActor) {
+    public CacheActor() {
         this.urlsToCleanBodies = new HashMap<>();
-        this.httpActor = httpActor;
     }
 
     @Override
@@ -38,10 +35,8 @@ public class CacheActor extends AbstractLoggingActor {
                     }
 
                 })
-                .match(CacheUrlResultRequest.class, msg -> {
-
-                    urlsToCleanBodies.put(msg.getUrl(), msg.getBody());
-
+                .match(CacheUrlResultToStoreRequest.class, msg -> {
+                    urlsToCleanBodies.put(msg.getUrl(), msg.getCleanedBody());
                 })
                 .matchAny(msg -> {
                     unhandled(msg);
@@ -49,7 +44,7 @@ public class CacheActor extends AbstractLoggingActor {
                 .build();
     }
 
-    public static Props props(ActorRef httpActor) {
-        return Props.create(CacheActor.class, httpActor);
+    public static Props props() {
+        return Props.create(CacheActor.class);
     }
 }

@@ -6,6 +6,9 @@ import com.chriniko.examples.ninth.actor.AskDemoActor;
 import com.chriniko.examples.ninth.actor.CacheActor;
 import com.chriniko.examples.ninth.actor.HttpActor;
 import com.chriniko.examples.ninth.actor.ParserActor;
+import com.chriniko.examples.ninth.message.HttpUrlGetRequest;
+
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
@@ -14,20 +17,26 @@ public class Main {
         // --- initialize system ---
         ActorSystem actorSystem = ActorSystem.create("tell-design-example");
 
-        ActorRef askDemoActor = actorSystem.actorOf(AskDemoActor.props(null, null), "ask-demo-actor");
+        ActorRef cacheActor = actorSystem.actorOf(CacheActor.props(), "cache-actor");
 
-        ActorRef cacheActor = actorSystem.actorOf(CacheActor.props(null), "cache-actor");
+        ActorRef httpActor = actorSystem.actorOf(HttpActor.props(), "http-actor");
 
-        ActorRef httpActor = actorSystem.actorOf(HttpActor.props(null), "http-actor");
+        ActorRef parserActor = actorSystem.actorOf(ParserActor.props(), "parser-actor");
 
-        ActorRef parserActor = actorSystem.actorOf(ParserActor.props(null, null), "parser-actor");
-
+        ActorRef askDemoActor = actorSystem.actorOf(AskDemoActor.props(cacheActor, httpActor, parserActor), "ask-demo-actor");
 
         // --- run your scenarios ---
-
+        askDemoActor.tell(new HttpUrlGetRequest("https://en.wikipedia.org/wiki/HTTP_403"), ActorRef.noSender());
 
 
         // --- shutdown system ---
+        try {
+            System.out.println("will terminate actor system in 7 seconds...");
+            TimeUnit.SECONDS.sleep(10);
+            actorSystem.terminate();
+        } catch (InterruptedException e) {
+            e.printStackTrace(System.err);
+        }
 
     }
 

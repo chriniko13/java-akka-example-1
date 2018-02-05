@@ -1,7 +1,6 @@
 package com.chriniko.examples.ninth.actor;
 
 import akka.actor.AbstractLoggingActor;
-import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.japi.pf.ReceiveBuilder;
 import com.chriniko.examples.ninth.message.CleanBodyRequest;
@@ -22,11 +21,6 @@ import java.net.URLConnection;
  */
 public class HttpActor extends AbstractLoggingActor {
 
-    private final ActorRef parserActor;
-
-    public HttpActor(ActorRef parserActor) {
-        this.parserActor = parserActor;
-    }
 
     @Override
     public Receive createReceive() {
@@ -36,14 +30,9 @@ public class HttpActor extends AbstractLoggingActor {
 
                     final String urlToFetchBodyFrom = msg.getUrl();
 
-                    //get body...
                     String body = getBody(urlToFetchBodyFrom);
 
-                    //compose a message...
-                    CleanBodyRequest cleanBodyRequest = new CleanBodyRequest(urlToFetchBodyFrom, body);
-
-                    //send this message to parse actor...
-                    parserActor.tell(cleanBodyRequest, getSelf());
+                    sender().tell(new CleanBodyRequest(urlToFetchBodyFrom, body), getSelf());
 
                 })
                 .matchAny(msg -> {
@@ -83,8 +72,8 @@ public class HttpActor extends AbstractLoggingActor {
 
     }
 
-    public static Props props(ActorRef parserActor) {
-        return Props.create(HttpActor.class, parserActor);
+    public static Props props() {
+        return Props.create(HttpActor.class);
     }
 
 }

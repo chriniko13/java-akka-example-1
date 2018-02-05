@@ -1,11 +1,6 @@
 package com.chriniko.examples.ninth.message;
 
-/*
-    Note ---> this message is used from the following actors:
 
-    1) AskDemoActor.java
-
- */
 public class HttpBodyResultResponse {
 
     private final String url;

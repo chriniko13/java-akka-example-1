@@ -1,12 +1,11 @@
 package com.chriniko.examples.ninth.message;
 
-
-public class CleanBodyRequest {
+public class ParseBodyRequest {
 
     private final String url;
     private final String bodyToClean;
 
-    public CleanBodyRequest(String url, String bodyToClean) {
+    public ParseBodyRequest(String url, String bodyToClean) {
         this.url = url;
         this.bodyToClean = bodyToClean;
     }

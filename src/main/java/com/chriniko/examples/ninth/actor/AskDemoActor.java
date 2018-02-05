@@ -5,6 +5,9 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.japi.pf.ReceiveBuilder;
 import com.chriniko.examples.ninth.message.*;
+import scala.concurrent.duration.Duration;
+
+import java.util.concurrent.TimeUnit;
 
 public class AskDemoActor extends AbstractLoggingActor {
 
@@ -12,7 +15,7 @@ public class AskDemoActor extends AbstractLoggingActor {
     private final ActorRef httpActor;
     private final ActorRef parserActor;
 
-    public AskDemoActor() {
+    public AskDemoActor(ActorRef cacheActor, ActorRef httpActor, ActorRef parserActor) {
         this.cacheActor = cacheActor;
         this.httpActor = httpActor;
         this.parserActor = parserActor;
@@ -24,17 +27,51 @@ public class AskDemoActor extends AbstractLoggingActor {
                 .create()
                 .match(HttpUrlGetRequest.class, msg -> {
 
-                    cacheActor.tell(new HttpUrlGetCacheRequest(msg.getUrl()), getSelf());
+                    cacheActor.tell(new HttpUrlGetCacheRequest(msg.getUrl()), self());
+
+                    //Scheduling a Tell Timeout
+                    context()
+                            .system()
+                            .scheduler()
+                            .scheduleOnce(
+                                    Duration.create(5, TimeUnit.SECONDS),
+                                    self(),
+                                    "timeout",
+                                    context().system().dispatcher(),
+                                    ActorRef.noSender());
+
                 })
                 .match(NoCacheResultResponse.class, msg -> {
 
-                    httpActor.tell(new SearchForUrlRequest(msg.getUrl()), getContext().self());
+                    httpActor.tell(new SearchForUrlRequest(msg.getUrl()), self());
 
+                })
+                .match(CleanBodyRequest.class, msg -> {
+
+                    parserActor.tell(new ParseBodyRequest(msg.getUrl(), msg.getBodyToClean()), self());
+                })
+
+                .match(CacheUrlResultRequest.class, msg -> {
+
+                    cacheActor.tell(new CacheUrlResultToStoreRequest(msg.getUrl(), msg.getBody()), sender());
+
+                    self().tell(new HttpBodyResultResponse(msg.getUrl(), msg.getBody()), self());
                 })
                 .match(HttpBodyResultResponse.class, msg -> {
 
-                    log().info("result received for url: " + msg.getUrl());
-                    //TODO add implementation...
+                    String resultMessage = "\n\n~~~~~~~~~~~"
+                            + "\nresult received for url: "
+                            + msg.getUrl()
+                            + ", result(body) = \n"
+                            + msg.getBody()
+                            + "\n~~~~~~~~~~~~~~~~~\n\n";
+
+                    log().info(resultMessage);
+                })
+                .match(String.class, msg -> msg.equals("timeout"), msg -> {
+
+                    log().error("Failed to process the request fast....");
+                    context().stop(self());
 
                 })
                 .matchAny(msg -> {
@@ -43,7 +80,7 @@ public class AskDemoActor extends AbstractLoggingActor {
                 .build();
     }
 
-    public static Props props() {
-        return Props.create(AskDemoActor.class);
+    public static Props props(ActorRef cacheActor, ActorRef httpActor, ActorRef parserActor) {
+        return Props.create(AskDemoActor.class, cacheActor, httpActor, parserActor);
     }
 }
