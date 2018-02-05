@@ -19,7 +19,9 @@ public class Main {
 
         ActorRef cacheActor = actorSystem.actorOf(CacheActor.props(), "cache-actor");
 
-        ActorRef httpActor = actorSystem.actorOf(HttpActor.props(), "http-actor");
+        ActorRef httpActor = actorSystem.actorOf(
+                HttpActor.props().withDispatcher("akka.akkasample.blocking-dispatcher"),
+                "http-actor");
 
         ActorRef parserActor = actorSystem.actorOf(ParserActor.props(), "parser-actor");
 
@@ -28,11 +30,10 @@ public class Main {
         // --- run your scenarios ---
         askDemoActor.tell(new HttpUrlGetRequest("https://en.wikipedia.org/wiki/HTTP_403"), ActorRef.noSender());
 
-
         // --- shutdown system ---
         try {
-            System.out.println("will terminate actor system in 7 seconds...");
-            TimeUnit.SECONDS.sleep(10);
+            System.out.println("will terminate actor system in 5 seconds...");
+            TimeUnit.SECONDS.sleep(5);
             actorSystem.terminate();
         } catch (InterruptedException e) {
             e.printStackTrace(System.err);

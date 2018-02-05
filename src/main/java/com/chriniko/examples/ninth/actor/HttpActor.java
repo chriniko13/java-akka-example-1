@@ -16,8 +16,6 @@ import java.net.URLConnection;
 /*
     Note: this actor does I/O process, so it would be nice to create it with his own pool executor in order to not block.
 
-    TODO do the above...
-
  */
 public class HttpActor extends AbstractLoggingActor {
 

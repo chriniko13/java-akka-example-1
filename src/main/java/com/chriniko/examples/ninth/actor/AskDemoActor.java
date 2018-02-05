@@ -34,7 +34,7 @@ public class AskDemoActor extends AbstractLoggingActor {
                             .system()
                             .scheduler()
                             .scheduleOnce(
-                                    Duration.create(5, TimeUnit.SECONDS),
+                                    Duration.create(7, TimeUnit.SECONDS),
                                     self(),
                                     "timeout",
                                     context().system().dispatcher(),
@@ -70,7 +70,7 @@ public class AskDemoActor extends AbstractLoggingActor {
                 })
                 .match(String.class, msg -> msg.equals("timeout"), msg -> {
 
-                    log().error("Failed to process the request fast....");
+                    log().warning("Failed to process the request fast....");
                     context().stop(self());
 
                 })

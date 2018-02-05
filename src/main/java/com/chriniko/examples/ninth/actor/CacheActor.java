@@ -29,9 +29,15 @@ public class CacheActor extends AbstractLoggingActor {
                     String body = urlsToCleanBodies.get(url);
 
                     if (body != null) {
+
+                        log().info("cache hit!!!");
                         sender().tell(new HttpBodyResultResponse(url, body), getContext().self());
+
                     } else {
+
+                        log().info("cache mis!!!");
                         sender().tell(new NoCacheResultResponse(url), getContext().self());
+
                     }
 
                 })
