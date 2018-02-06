@@ -3,22 +3,18 @@ package com.chriniko.examples.tenth.actor;
 import akka.actor.AbstractLoggingActor;
 import akka.actor.Props;
 import akka.japi.pf.ReceiveBuilder;
-import com.chriniko.examples.tenth.message.ProduceRandomNumber;
-import com.chriniko.examples.tenth.message.RandomNumber;
+import com.chriniko.examples.tenth.message.Id;
+import com.chriniko.examples.tenth.message.ProduceId;
 
-import java.util.Random;
+import java.util.UUID;
 
-public class RandomGeneratorActor extends AbstractLoggingActor {
-
-    private Random random;
+public class IdProviderActor extends AbstractLoggingActor {
 
     @Override
     public void preStart() throws Exception {
         super.preStart();
 
         log().info("Starting actor...");
-
-        random = new Random();
     }
 
     @Override
@@ -32,11 +28,9 @@ public class RandomGeneratorActor extends AbstractLoggingActor {
     public Receive createReceive() {
         return ReceiveBuilder
                 .create()
-                .match(ProduceRandomNumber.class, msg -> {
+                .match(ProduceId.class, msg -> {
 
-                    log().info("will produce a random number for: " + sender().path().name());
-
-                    sender().tell(new RandomNumber(random.nextInt(16)), self());
+                    sender().tell(new Id(UUID.randomUUID().toString()), self());
 
                 })
                 .matchAny(this::unhandled)
@@ -44,6 +38,6 @@ public class RandomGeneratorActor extends AbstractLoggingActor {
     }
 
     public static Props props() {
-        return Props.create(RandomGeneratorActor.class);
+        return Props.create(IdProviderActor.class);
     }
 }
