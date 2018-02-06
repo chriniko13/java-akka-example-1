@@ -2,4 +2,4 @@
      NOTES
 ================================
 
-1) Designing with tell pattern.
+1) Designing with ask pattern.
