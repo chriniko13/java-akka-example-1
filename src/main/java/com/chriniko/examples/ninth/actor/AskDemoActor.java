@@ -15,10 +15,14 @@ public class AskDemoActor extends AbstractLoggingActor {
     private final ActorRef httpActor;
     private final ActorRef parserActor;
 
+    private int requestsCounter;
+
     public AskDemoActor(ActorRef cacheActor, ActorRef httpActor, ActorRef parserActor) {
         this.cacheActor = cacheActor;
         this.httpActor = httpActor;
         this.parserActor = parserActor;
+
+        requestsCounter = 0;
     }
 
     @Override
@@ -26,6 +30,8 @@ public class AskDemoActor extends AbstractLoggingActor {
         return ReceiveBuilder
                 .create()
                 .match(HttpUrlGetRequest.class, msg -> {
+
+                    log().info("Total requests = " + (++requestsCounter));
 
                     cacheActor.tell(new HttpUrlGetCacheRequest(msg.getUrl()), self());
 
