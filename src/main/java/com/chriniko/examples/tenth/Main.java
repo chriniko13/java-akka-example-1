@@ -38,6 +38,10 @@ public class Main {
                             return randomNumberMessage.getNumber() + id.getId();
                         })
                 .thenCompose(res -> PatternsCS.ask(erroneousActor, new ProduceWork(), Timeout.apply(3, TimeUnit.SECONDS)))
+                .thenApply(erroneousActorResult -> {
+                    System.out.println("thenApply#stage --- erroneousActorResult = " + erroneousActorResult);
+                    return "success";
+                })
                 .whenComplete((result, error) -> {
                     System.out.println("whenComplete#stage --- result = " + result + ", error = " + error);
                 })
