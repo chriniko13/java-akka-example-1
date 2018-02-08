@@ -1,0 +1,6 @@
+================================
+     NOTES
+================================
+
+1) Designing with forward pattern.
+2) Designing with pipe pattern.
