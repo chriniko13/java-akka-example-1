@@ -1,0 +1,5 @@
+================================
+     NOTES
+================================
+
+1) Example demonstrating supervisor error handling strategies.

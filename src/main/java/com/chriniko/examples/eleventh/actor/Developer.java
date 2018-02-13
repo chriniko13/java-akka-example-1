@@ -40,6 +40,7 @@ public class Developer extends AbstractLoggingActor {
                     CompletableFuture<EstimationCompleted> estimationWork
                             = CompletableFuture.supplyAsync(() -> new EstimationCompleted(5));
 
+                    // pipe example usage...
                     PatternsCS
                             .pipe(estimationWork, context().system().dispatcher())
                             .to(sender());
